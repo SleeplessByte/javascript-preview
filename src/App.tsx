@@ -279,6 +279,11 @@ function PickExercise({ track }: { track: Track }) {
 
   return (
     <main>
+      <header>
+        <h1>{track}</h1>
+      </header>
+
+      <h2>Concepts</h2>
       <ul>
         {config.exercises.concept.map((exercise) => (
           <li key={exercise.uuid}>
@@ -288,6 +293,15 @@ function PickExercise({ track }: { track: Track }) {
           </li>
         ))}
       </ul>
+
+      <footer>
+        This is a playground for the V3 {track} track. Not all functions might
+        be working properly; it's just a playground that allows you to test
+        exercises in the browser, without installing anything. At this time
+        you need a <i>modern</i> browser. You can only store one exercise at
+        the same time (this will change), so when you press "back" in the
+        bottom right corner, you'll lose all code. Feel free to navigate away.
+      </footer>
     </main>
   )
 }
