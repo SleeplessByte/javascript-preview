@@ -40,5 +40,6 @@ const EVENTS = {
   hints: 'view.hints',
   executeTests: 'execute.tests',
   unlock: 'exercise.solved',
-  focus: 'editor.focus'
+  focus: 'editor.focus',
+  notification: 'notification'
 }

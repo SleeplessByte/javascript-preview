@@ -140,6 +140,26 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       }
     });
 
+    editor.addAction({
+      // An unique identifier of the contributed action.
+      id: 'preview.action.exercise.save',
+
+      // A label of the action that will be presented to the user.
+      label: 'Save Exercise',
+      keybindings: [
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
+      ],
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convinience
+      run: function( editor ) {
+       emitEvent('notification', {
+         title: 'Auto-saving enabled',
+         details: 'Your code is automatically stored as you type, as long as there is enough space on your device.'
+        })
+      }
+    });
+
     this.subscriptions.push(onEvent('commands', onCommandPallete))
     this.subscriptions.push(onEvent('export', onExport))
     this.subscriptions.push(onEvent('focus', editor.focus.bind(editor)))

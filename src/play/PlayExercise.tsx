@@ -118,6 +118,7 @@ export function PlayExercise(
             />
           </div>
           <Popups track={track} type={type} slug={slug} />
+          <Notifications />
         </PortalHost>
       </Suspense>
     </main>
@@ -538,6 +539,96 @@ function AfterPopup(
             'No additional content'}
         </Suspense>
       </Modal>
+    </Portal>
+  )
+}
+
+function Notifications() {
+  const [notifications, setNotifications] = useState<
+    Array<{ title: string; details: string; key: string }>
+  >([])
+
+  const onNotificationReceived = useCallback(
+    (notification: { title: string; details: string }) => {
+      const newNotification = {
+        ...notification,
+        key: Math.random().toString(16).slice(2),
+      }
+
+      setNotifications((current) => [...current, newNotification])
+
+      // TODO: make safe for unmounts
+      setTimeout(() => {
+        setNotifications((current) =>
+          current.filter(
+            (currentNotification) => currentNotification !== newNotification
+          )
+        )
+      }, 1000 * 5)
+    },
+    [setNotifications]
+  )
+
+  useEvent('notification', onNotificationReceived)
+
+  return (
+    <Portal>
+      <ol
+        style={{
+          position: 'absolute',
+          right: 32,
+          bottom: 32,
+          display: 'flex',
+          flexDirection: 'column',
+          margin: 0,
+          padding: 0,
+          listStyle: 'none',
+          pointerEvents: 'none',
+        }}
+      >
+        <AnimatePresence>
+          {notifications.map(({ title, details, key }) => (
+            <motion.li
+              key={key}
+              exit="exit"
+              initial="hidden"
+              animate="visible"
+              whileHover="active"
+              style={{
+                color: 'white',
+                background: '#333',
+                padding: '8px 12px',
+                borderRadius: 8,
+                marginTop: 12,
+                minWidth: 100,
+                maxWidth: 240,
+                boxShadow: '6px 6px 3px rgba(0, 0, 0, .25)',
+              }}
+              variants={{
+                hidden: { opacity: 0, y: 10, scale: 0.9 },
+                exit: {
+                  opacity: 0,
+                  scale: 0.5,
+                  transition: { duration: 0.125, ease: 'easeIn' },
+                },
+                visible: {
+                  opacity: 0.8,
+                  y: 0,
+                  scale: 1,
+                  transition: { duration: 0.225, ease: 'easeOut' },
+                },
+                active: {
+                  opacity: 1,
+                  transition: { duration: 0.225, ease: 'easeInOut' },
+                },
+              }}
+            >
+              <header style={{ fontWeight: 'bold' }}>{title}</header>
+              <p style={{ marginBottom: 4, fontSize: 14 }}>{details}</p>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ol>
     </Portal>
   )
 }
