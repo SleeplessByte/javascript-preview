@@ -3,7 +3,7 @@ import React, { useState, useRef, RefObject, useEffect } from 'react'
 import styles from './styles.module.css'
 import { Link } from 'react-router-dom'
 import { SupportedTrack } from '../track/types'
-import { emit } from './useEvent'
+import { emit, useEvent } from './useEvent'
 
 export interface HeaderProps {
   track: SupportedTrack
@@ -22,6 +22,27 @@ export function Header({ track, type, slug }: HeaderProps) {
     setActive((current) => (current === false ? false : next))
   const dismiss = () => setActive(false)
 
+  useEffect(() => {
+    active === false && emit('focus')
+  }, [active])
+
+  const maybeDismissAll = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    const captured =
+      e.target &&
+      'closest' in e.target &&
+      (e.target as HTMLElement).closest(
+        `.${styles['menu__dropdown']}, .${styles['menu']}`
+      )
+
+    if (captured) {
+      return
+    }
+
+    emit('focus')
+  }
+
+  // useEvent('focus', dismiss)
+
   const file = useRef<HTMLLIElement | null>(null)
   const view = useRef<HTMLLIElement | null>(null)
   const go = useRef<HTMLLIElement | null>(null)
@@ -30,7 +51,7 @@ export function Header({ track, type, slug }: HeaderProps) {
   const activeRef = active ? { file, view, go, help }[active] : null
 
   return (
-    <header className={styles['header']} onClick={() => console.log("Focus left editor")}>
+    <header className={styles['header']} onClick={maybeDismissAll}>
       <ol className={styles['menu']}>
         <li ref={file}>
           <button
@@ -145,20 +166,10 @@ function DropDown({
       )
     }
     case 'go': {
-      return (
-        <GoMenu
-          left={left}
-          top={top + 32}
-        />
-      )
+      return <GoMenu left={left} top={top + 32} />
     }
     case 'help': {
-      return (
-        <HelpMenu
-          left={left}
-          top={top + 32}
-        />
-      )
+      return <HelpMenu left={left} top={top + 32} />
     }
   }
 
@@ -166,9 +177,18 @@ function DropDown({
 }
 
 function FileMenu({ left, top }: { left: number; top: number }) {
-  const doExport = () => { emit('export') }
-  const doRefresh = () => { emit('refresh') }
-  const doReset = () => { emit('reset') }
+  const doExport = () => {
+    emit('export')
+    emit('focus')
+  }
+  const doRefresh = () => {
+    emit('refresh')
+    emit('focus')
+  }
+  const doReset = () => {
+    emit('reset')
+    emit('focus')
+  }
 
   return (
     <ul
@@ -209,9 +229,15 @@ function ViewMenu({
   type: 'concept' | 'practice'
   slug: string
 }) {
-  const doCommand = () => { emit('commands') }
-  const doInstructions = () => { emit('instructions') }
-  const doHints = () => { emit('hints') }
+  const doCommand = () => {
+    emit('commands')
+  }
+  const doInstructions = () => {
+    emit('instructions')
+  }
+  const doHints = () => {
+    emit('hints')
+  }
 
   return (
     <ul
@@ -248,14 +274,10 @@ function ViewMenu({
   )
 }
 
-function GoMenu({
-  left,
-  top
-}: {
-  left: number
-  top: number
-}) {
-  const runTests = () => { emit('executeTests') }
+function GoMenu({ left, top }: { left: number; top: number }) {
+  const runTests = () => {
+    emit('executeTests')
+  }
 
   return (
     <ul
@@ -271,15 +293,13 @@ function GoMenu({
   )
 }
 
-function HelpMenu({
-  left,
-  top
-}: {
-  left: number
-  top: number
-}) {
-  const showInstructions = () => { emit('instructions') }
-  const showHints = () => { emit('hints') }
+function HelpMenu({ left, top }: { left: number; top: number }) {
+  const showInstructions = () => {
+    emit('instructions')
+  }
+  const showHints = () => {
+    emit('hints')
+  }
 
   return (
     <ul
