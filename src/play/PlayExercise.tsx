@@ -30,6 +30,7 @@ import { useHasSolved, markAsSolved } from '../state/useHasSolved'
 import { TestRun } from '../tests/types'
 import { unlock } from '../state/useHasPrerequisites'
 import { useConfig } from '../track/useConfig'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const LazyMarkdown = React.lazy(() =>
   import('react-markdown').then((i) => ({ default: i.default }))
@@ -55,7 +56,7 @@ export function PlayExercise(
     slug
   )
   const { data: code, update: updateCode } = useUserCode(track, type, slug)
-  const { stub } = exercise || {}
+  const { stub, types } = exercise || {}
 
   const resetExercise = useCallback(() => {
     stub && updateCode(stub)
@@ -108,10 +109,12 @@ export function PlayExercise(
             <Editor
               key={resetIteration}
               track={track}
+              ready={!!(stub && code)}
               code={
                 stub ? (typeof code === 'string' ? code : undefined) : undefined
               }
               saveCode={updateCode}
+              types={(types || '').startsWith('404') ? undefined : types || undefined}
             />
           </div>
           <Popups track={track} type={type} slug={slug} />
@@ -125,16 +128,20 @@ function Editor({
   track,
   code,
   saveCode,
+  ready,
+  types
 }: {
   track: SupportedTrack
   code: string | undefined
+  types: string | undefined
+  ready: boolean
   saveCode(next: string): void
 }) {
   const codeRef = useRef<string>()
 
   codeRef.current = code
 
-  if (code === undefined) {
+  if (code === undefined || !ready) {
     return <Loading />
   }
 
@@ -143,6 +150,7 @@ function Editor({
       language={TRACK_TO_CODE_LANGUAGE[track]}
       onCodeUpdated={saveCode}
       codeRef={codeRef as RefObject<string>}
+      types={types}
     />
   )
 }
@@ -469,7 +477,12 @@ function RunTests({
       <tfoot>
         <tr>
           <td colSpan={2}>
-            <code style={{ marginTop: 16, fontWeight: 'bold', display: 'block' }}>Ran {result.passed} / {result.passed + result.skipped + result.failed} tests</code>
+            <code
+              style={{ marginTop: 16, fontWeight: 'bold', display: 'block' }}
+            >
+              Ran {result.passed} /{' '}
+              {result.passed + result.skipped + result.failed} tests
+            </code>
           </td>
         </tr>
       </tfoot>

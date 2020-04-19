@@ -1,8 +1,9 @@
 import React, { RefObject } from 'react'
-import MonacoEditor, { EditorDidMount, ChangeHandler } from 'react-monaco-editor'
+import MonacoEditor, { EditorDidMount, ChangeHandler, EditorWillMount } from 'react-monaco-editor'
 import { on as onEvent, emit as emitEvent } from './useEvent'
 
-type EditorProps ={
+type EditorProps = {
+  types: string | undefined
   language: string
   codeRef: RefObject<string>
   onCodeUpdated: (nextCode: string) => void
@@ -20,11 +21,23 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
 
     this.onChange = this.onChange.bind(this)
     this.editorDidMount = this.editorDidMount.bind(this)
+    this.editorWillMount = this.editorWillMount.bind(this)
     this.subscriptions = []
   }
 
   componentDidCatch(err: Error) {
     this.setState((p) => ({ ...p, error: err }))
+  }
+
+  editorWillMount(
+    monaco: Parameters<EditorWillMount>[0]
+  ) {
+
+    if (this.props.types) {
+      monaco.languages.typescript.javascriptDefaults.addExtraLib([
+        this.props.types
+      ].join('\n'), 'ts:filename/global.d.ts');
+    }
   }
 
   editorDidMount(
@@ -170,6 +183,7 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
         options={options}
         onChange={this.onChange}
         editorDidMount={this.editorDidMount}
+        editorWillMount={this.editorWillMount}
       />
     )
   }
