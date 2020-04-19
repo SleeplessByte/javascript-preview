@@ -1,36 +1,32 @@
 import { TestRun } from "./types"
 
-type FailedTestRun = {
+export type FailedTestRun = {
   message: string
 }
 
-export function runTests(exerciseTests: string, userCode: string, slug: string): Promise<TestRun | FailedTestRun> {
+export function runTests(exerciseTests: string, userCode: string, slug: string): Promise<(TestRun | FailedTestRun) & { cleanup: () => void }> {
   const { tests, object } = prepareTest(
     exerciseTests,
     userCode,
     slug
   )
 
+  function cleanup() {
+    console.log('[suite] cleaning up run', tests, object)
+    URL.revokeObjectURL(tests)
+    URL.revokeObjectURL(object)
+  }
+
   return import(/* webpackIgnore: true */ `${tests}`)
     .then((result) => {
-      console.info(result)
-      console.info(result.run)
-
-      URL.revokeObjectURL(tests)
-      URL.revokeObjectURL(object)
-
-      return result.run as TestRun
+      return { ...result.run as TestRun, cleanup }
     })
     .catch((error) => {
-      console.error('ERROR WHILST RUNNING TEST', error, tests)
+      console.error('[suite] failed to run the tests \n', error)
 
-      URL.revokeObjectURL(tests)
-      URL.revokeObjectURL(object)
-
-      return { message: error.message } as FailedTestRun
+      return { ...{ message: error.message } as FailedTestRun, cleanup }
     })
 }
-
 
 function prepareTest(tests: string, code: string, slug: string) {
   const importableCode = esm`${code}`
@@ -85,23 +81,71 @@ const run = {
   skipped: 0,
   passed: 0,
   messages: [],
-  promises: []
+  promises: [],
+  complete: null
+}
+
+let failFast = true
+let awaiting = 0
+
+function startTest(name) {
+  awaiting += 1
+  console.log("[test] "+ name)
+}
+
+function passTest(name) {
+  awaiting -= 1
+  run.passed += 1
+
+  run.messages.push({ test: name, message: 'passed' })
+}
+
+function failTest(name, err) {
+  awaiting -= 1
+  run.failed += 1
+  run.messages.push({ test: name, message: 'failed', details: err.message })
+
+  if (err instanceof AssertionFailed) {
+    console.error(\`[test] failed assertion of \${name}.\\n\`, err.message)
+  } else if (err instanceof SyntaxError) {
+    failFast = true
+    console.error(\`[test] syntax is not valid JavaScript \\n\`, err)
+  } else {
+    console.error(\`[test] failed to run \${name} \\n\`, err)
+  }
+}
+
+function skipTest() {
+  run.skipped += 1
+}
+
+function runSuite(name) {
+  console.log("[suite] " + name)
+  awaiting += 1
+}
+
+function finishSuite() {
+  awaiting -= 1
+  if (awaiting > 0) {
+    return console.log("[suite] still running")
+  }
+
+  run.complete = run.failed === 0
 }
 
 async function test(name, c) {
-  if (run.failed > 0) {
-    run.skipped += 1
+  if (failFast && run.failed > 0) {
+    skipTest()
     return
   }
 
+  startTest(name)
+
   try {
-    console.log(name, await c())
-    run.messages.push({ test: name, message: 'passed' })
-    run.passed += 1
+    await c()
+    passTest(name)
   } catch (err) {
-    console.error(name, err)
-    run.messages.push({ test: name, message: 'failed', err: err.message })
-    run.failed += 1
+    failTest(name, err)
   }
 }
 
@@ -110,36 +154,45 @@ const it = test
 const xit = test
 
 async function describe(name, c) {
-  console.log("running tests", name)
-  return await c()
+  runSuite(name)
+  await c()
+  await Promise.all(run.promises)
+  finishSuite()
+}
+
+function promise(p) {
+  run.promises.push(p)
+  return p
+}
+
+class AssertionFailed extends Error {
 }
 
 function expect(value) {
   return {
     resolves: {
       toBe(x) {
-        const p = value.then(
-          (resolved) => {
-            if (x !== resolved) {
-              throw new Error(\`Expected \${JSON.stringify(resolved, undefined, 2)} to be \${x}\`)
+        return promise(
+          value.then(
+            (resolved) => {
+              if (x !== resolved) {
+                throw new AssertionFailed(\`Expected \${JSON.stringify(resolved, undefined, 2)} to be \${x}\`)
+              }
             }
-          }
+          )
         )
-
-        run.promises.push(p)
-        return p
       }
     },
     rejects: {
       toThrow(x) {
-        const p = value.then(
-          () => {
-            throw new Error(\`Expected error \${x}\`)
-          },
-          () => { /* */ }
+        return promise(
+          value.then(
+            () => {
+              throw new AssertionFailed(\`Expected error \${x}\`)
+            },
+            () => { /* */ }
+          )
         )
-        run.promises.push(p)
-        return p
       }
     },
     toBeCloseTo(x, y = 0.01) {
@@ -147,17 +200,17 @@ function expect(value) {
         return true
       }
 
-      throw new Error(\`Expected \${value} to be close to \${x}\`)
+      throw new AssertionFailed(\`Expected \${value} to be close to \${x}\`)
     },
     toBe(x) {
       if (x !== value) {
-        throw new Error(\`Expected \${value} to be \${x}\`)
+        throw new AssertionFailed(\`Expected \${value} to be \${x}\`)
       }
     },
     toEqual(x) {
       // eslint-disable-next-line eqeqeq
       if (x != value) {
-        throw new Error(\`Expected \${value} to equal \${x}\`)
+        throw new AssertionFailed(\`Expected \${value} to equal \${x}\`)
       }
     }
   }

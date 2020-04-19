@@ -30,7 +30,7 @@ export function Header({ track, type, slug }: HeaderProps) {
   const activeRef = active ? { file, view, go, help }[active] : null
 
   return (
-    <header className={styles['header']}>
+    <header className={styles['header']} onClick={() => console.log("Focus left editor")}>
       <ol className={styles['menu']}>
         <li ref={file}>
           <button
@@ -231,7 +231,7 @@ function ViewMenu({
       </li>
       <li className={styles['item']}>
         <button onClick={doHints}>
-          View Hints <KeyCommand>Ctrl + H</KeyCommand>
+          View Hints <KeyCommand>Ctrl + Shift + H</KeyCommand>
         </button>
       </li>
       <li className={styles['divider']} />
@@ -293,7 +293,7 @@ function HelpMenu({
       </li>
       <li className={styles['item']}>
         <button onClick={showHints}>
-          Exercise Help <KeyCommand>Ctrl + H</KeyCommand>
+          Exercise Help <KeyCommand>Ctrl + Shift + H</KeyCommand>
         </button>
       </li>
       <li className={styles['divider']} />

@@ -5,7 +5,7 @@ import React, {
   useRef,
   RefObject,
   useState,
-  useLayoutEffect,
+  Fragment,
 } from 'react'
 import {
   RouteComponentProps,
@@ -24,8 +24,12 @@ import { useUserCode } from '../state/useUserCode'
 import { Modal } from '../core/Modal'
 import { Portal } from '../core/Portal'
 import { PortalHost } from '../core/Portal/PortalHost'
-import { Button } from '../core/Button'
-import { runTests } from '../tests/runner'
+import { Button, ButtonLink } from '../core/Button'
+import { runTests, FailedTestRun } from '../tests/runner'
+import { useHasSolved, markAsSolved } from '../state/useHasSolved'
+import { TestRun } from '../tests/types'
+import { unlock } from '../state/useHasPrerequisites'
+import { useConfig } from '../track/useConfig'
 
 const LazyMarkdown = React.lazy(() =>
   import('react-markdown').then((i) => ({ default: i.default }))
@@ -44,6 +48,7 @@ export function PlayExercise(
 ) {
   const [resetIteration, setResetIteration] = useState(1)
   const { track, type, slug } = props.match.params
+  const { data: config } = useConfig(track)
   const { data: exercise, refresh: refreshExercise } = useExercise(
     track,
     type,
@@ -57,6 +62,24 @@ export function PlayExercise(
     setResetIteration((prev) => prev + 1)
   }, [updateCode, stub])
 
+  const solveExercise = useCallback(() => {
+    if (!config) {
+      return
+    }
+
+    markAsSolved(track, type, slug)
+
+    // Unlocks concepts
+    if (type === 'concept') {
+      const exercise = config.exercises[type].find(
+        (exercise) => exercise.slug === slug
+      )
+      if (exercise) {
+        unlock(exercise.concepts)
+      }
+    }
+  }, [track, type, slug, config])
+
   // Initial stub to code
   useEffect(() => {
     if (code === null && stub) {
@@ -67,6 +90,7 @@ export function PlayExercise(
 
   useEvent('refresh', refreshExercise)
   useEvent('reset', resetExercise)
+  useEvent('unlock', solveExercise)
 
   return (
     <main
@@ -77,9 +101,9 @@ export function PlayExercise(
         overflow: 'hidden',
       }}
     >
+      <Header track={track} type={type} slug={slug} />
       <Suspense fallback={<Loading />}>
         <PortalHost>
-          <Header track={track} type={type} slug={slug} />
           <div style={{ flex: 1 }}>
             <Editor
               key={resetIteration}
@@ -174,6 +198,12 @@ function Popups({
       <Route path="/:track/play/:type/:slug/hints" component={HintsPopup} />
       <Route path="/:track/play/:type/:slug/run" component={RunTestsPopup} />
       <Route path="/:track/play/:type/:slug/after" component={AfterPopup} />
+      <Route
+        render={() => {
+          emit('focus')
+          return null
+        }}
+      />
     </Switch>
   )
 }
@@ -287,14 +317,18 @@ function LisItem({
 }
 
 function RunTestsPopup(
-  props: RouteComponentProps<{  track: SupportedTrack
+  props: RouteComponentProps<{
+    track: SupportedTrack
     type: 'concept' | 'practice'
-    slug: string }>
+    slug: string
+  }>
 ) {
+  const [completed, setCompleted] = useState(false)
   const { track, type, slug } = props.match.params
   const { goBack } = useHistory()
   const { data: code } = useUserCode(track, type, slug)
   const { data: exercise } = useExercise(track, type, slug)
+  const afterHref = `/${track}/play/${type}/${slug}/after`
 
   if (code === null || code === undefined || exercise === null) {
     return null
@@ -302,34 +336,194 @@ function RunTestsPopup(
 
   return (
     <Portal>
-      <Modal title="Run Tests" visible={true} onBack={goBack}>
-        <RunTests slug={slug} code={code} tests={exercise.tests || ''} />
+      <Modal
+        title="Test Results"
+        visible={true}
+        onBack={goBack}
+        footer={
+          completed ? (
+            <ButtonLink to={afterHref}>Complete exercise</ButtonLink>
+          ) : null
+        }
+      >
+        <RunTests
+          slug={slug}
+          code={code}
+          tests={exercise.tests || ''}
+          onCompleted={() => setCompleted(true)}
+        />
       </Modal>
     </Portal>
   )
 }
 
-function RunTests({ slug, code, tests }: { slug: string, code: string, tests: string }) {
-  const [result, setResult] = useState<object>()
+function RunTests({
+  slug,
+  code,
+  tests,
+  onCompleted,
+}: {
+  slug: string
+  code: string
+  tests: string
+  onCompleted: () => void
+}) {
+  const [result, setResult] = useState<FailedTestRun | TestRun>()
+  const cleanupRef = useRef<null | (() => void)>(null)
 
   useEffect(() => {
-    runTests(tests || '', code || '', slug)
-      .then(setResult, setResult)
-  }, [code, tests, slug])
+    // Unmounting
+
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const cleanup = cleanupRef.current
+      cleanup && cleanup()
+    }
+  }, [])
+
+  useEffect(() => {
+    let stillCareAboutThis = true
+
+    // Cleanup previous run
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = null
+    }
+
+    runTests(tests || '', code || '', slug).then(
+      ({ cleanup, ...result }) => {
+        if (stillCareAboutThis) {
+          cleanupRef.current = cleanup
+          setResult(result)
+
+          if ('complete' in result) {
+            if (result.complete) {
+              emit('unlock')
+              onCompleted()
+            }
+          }
+        } else {
+          cleanup()
+        }
+      },
+      ({ cleanup, ...result }) => {
+        if (stillCareAboutThis) {
+          cleanupRef.current = cleanup
+          setResult(result)
+        } else {
+          cleanup()
+        }
+      }
+    )
+
+    return () => {
+      stillCareAboutThis = false
+    }
+  }, [code, tests, slug, onCompleted])
+
+  if (!result) {
+    return <Loading />
+  }
+
+  if (!('complete' in result)) {
+    return (
+      <Fragment>
+        <h3 style={{ marginTop: 10 }}>Tests did not run to completion</h3>
+        <p>{result.message}</p>
+      </Fragment>
+    )
+  }
 
   return (
-    result ? <div>{JSON.stringify(result, undefined, 2)}</div> : <Loading />
+    <table style={{ width: '100%' }}>
+      <tbody>
+        {result.messages.map(({ test, message, details }) => {
+          return (
+            <Fragment key={test}>
+              <tr key={test}>
+                <td>
+                  <code>{test}</code>
+                </td>
+                <td>{message === 'passed' ? '✅' : '💥'}</td>
+              </tr>
+              {details && (
+                <tr key={`${test}-error`}>
+                  <td colSpan={2}>
+                    <p
+                      style={{
+                        marginTop: 4,
+                        color: 'red',
+                        fontFamily: 'monospace',
+                        fontSize: 14,
+                      }}
+                    >
+                      {details}
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </Fragment>
+          )
+        })}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colSpan={2}>
+            <code style={{ marginTop: 16, fontWeight: 'bold', display: 'block' }}>Ran {result.passed} / {result.passed + result.skipped + result.failed} tests</code>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
   )
 }
 
 function AfterPopup(
-  props: RouteComponentProps<{ track: string; type: string; slug: string }>
+  props: RouteComponentProps<{
+    track: SupportedTrack
+    type: 'concept' | 'practice'
+    slug: string
+  }>
 ) {
+  const { track, type, slug } = props.match.params
+  const { data } = useExercise(track, type, slug)
   const { goBack } = useHistory()
+  const hasSolved = useHasSolved(track, type, slug)
+
+  if (!data) {
+    return null
+  }
+
+  if (!hasSolved) {
+    return (
+      <Portal>
+        <Modal title="Not yet solved" visible={true} onBack={goBack}>
+          <p>
+            Complete this exercise to unlock the extra content for this
+            exercise.
+          </p>
+        </Modal>
+      </Portal>
+    )
+  }
+
+  const { after } = data
+
   return (
     <Portal>
-      <Modal title="After" visible={true} onBack={goBack}>
-        Instructions
+      <Modal
+        title="Congratulations"
+        visible={true}
+        onBack={goBack}
+        footer={
+          <ButtonLink to={`/${track}/exercises`}>Next exercise</ButtonLink>
+        }
+      >
+        <Suspense fallback={<Loading />}>
+          {(after && !after.startsWith('404: Not Found') && (
+            <LazyMarkdown source={after} />
+          )) ||
+            'No additional content'}
+        </Suspense>
       </Modal>
     </Portal>
   )

@@ -69,22 +69,23 @@ export function Modal({
           variants={{
             hidden: {
               opacity: 0,
-              scale: 0.8,
-              y: 100,
-              transition: {
-                ease: 'easeOut',
-                duration: 0.225,
-              },
+              // scale: 0.8,
+              // y: 100,
             },
             visibile: {
               opacity: 1,
               scale: 1,
               y: 0,
+              transition: {
+                ease: 'easeOut',
+                duration: 0.225,
+                delay: 0.125
+              },
             },
             exit: {
               opacity: 0,
-              scale: 0.5,
-              y: 100,
+              // scale: 0.5,
+              // y: 100,
               transition: {
                 ease: 'easeIn',
                 duration: 0.125,
@@ -96,9 +97,9 @@ export function Modal({
         >
           <div className={styles['modal__content']}>
             <div className={styles['modal__header']}>
-              <h5 className={styles['modal__title']} id="staticBackdropLabel">
+              <h2 className={styles['modal__title']} id="staticBackdropLabel">
                 {title}
-              </h5>
+              </h2>
               <button
                 type="button"
                 className={styles['modal__close']}

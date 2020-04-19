@@ -14,6 +14,8 @@ interface RefreshableExercise {
     instructions: string | null
     hints: string | null
     tests: string | null
+    after: string | null
+    types: string | null
   }
 
   refresh(): void
@@ -71,13 +73,17 @@ export function useExercise(
         { signal }
       ).then((response) => response.text()),
       fetch(
+        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/after.md`,
+        { signal }
+      ).then((response) => response.text()),
+      fetch(
         `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/global.d.ts`,
         { signal }
       )
         .then((response) => response.text())
         .catch(() => null),
     ])
-      .then(([stub, tests, introduction, instructions, hints, types]) =>
+      .then(([stub, tests, introduction, instructions, hints, after, types]) =>
         setExercise({
           track,
           type,
@@ -89,6 +95,8 @@ export function useExercise(
             instructions,
             hints,
             tests,
+            after,
+            types
           },
         })
       )

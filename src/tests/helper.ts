@@ -1,3 +1,4 @@
+// TJIS FILE IS NOT USED (yet).
 import { TestRun } from "./types"
 
 export const run: TestRun = {
@@ -5,7 +6,8 @@ export const run: TestRun = {
   skipped: 0,
   passed: 0,
   messages: [],
-  promises: []
+  promises: [],
+  complete: null
 }
 
 export async function test(name: string, c: Function) {
@@ -20,7 +22,7 @@ export async function test(name: string, c: Function) {
     run.passed += 1
   } catch (err) {
     console.error(name, err)
-    run.messages.push({ test: name, message: 'failed', err: err.message })
+    run.messages.push({ test: name, message: 'failed', details: err.message })
     run.failed += 1
   }
 }

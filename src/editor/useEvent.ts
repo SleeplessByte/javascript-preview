@@ -38,5 +38,7 @@ const EVENTS = {
   reset: 'exercise.reset',
   instructions: 'view.instructions',
   hints: 'view.hints',
-  executeTests: 'execute.tests'
+  executeTests: 'execute.tests',
+  unlock: 'exercise.solved',
+  focus: 'editor.focus'
 }

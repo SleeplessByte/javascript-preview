@@ -81,7 +81,8 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       // A label of the action that will be presented to the user.
       label: 'View Instructions',
       keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_I,
+        monaco.KeyCode.F10,
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_I
       ],
 
       // Method that will be executed when the action is triggered.
@@ -98,7 +99,8 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       // A label of the action that will be presented to the user.
       label: 'View Hints',
       keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_H,
+        monaco.KeyCode.F11,
+        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_H
       ],
 
       // Method that will be executed when the action is triggered.
@@ -127,6 +129,7 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
 
     this.subscriptions.push(onEvent('commands', onCommandPallete))
     this.subscriptions.push(onEvent('export', onExport))
+    this.subscriptions.push(onEvent('focus', editor.focus.bind(editor)))
   }
 
   componentWillUnmount() {

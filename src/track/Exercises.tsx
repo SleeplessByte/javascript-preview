@@ -8,6 +8,7 @@ import { Button, ButtonLink } from '../core/Button'
 import styles from './styles.module.css'
 import { ConceptExercise, PracticeExercise, SupportedTrack } from './types'
 import { useHasPrerequisites } from '../state/useHasPrerequisites'
+import { useHasSolved } from '../state/useHasSolved'
 
 export function Exercises(
   props: RouteComponentProps<{ track: SupportedTrack }>
@@ -107,6 +108,7 @@ function ExerciseLink({
   type: 'concept' | 'practice'
   prerequisites: string[]
 }) {
+  const solved = useHasSolved(track, type, slug)
   const enabled = useHasPrerequisites(prerequisites)
   return (
     <ButtonLink
@@ -114,7 +116,7 @@ function ExerciseLink({
       to={`/${track}/play/${type}/${slug}`}
       type="secondary"
     >
-      {slug}
+      {solved && '✅ '}{slug}
     </ButtonLink>
   )
 }
