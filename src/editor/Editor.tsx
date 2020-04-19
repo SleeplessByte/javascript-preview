@@ -115,7 +115,7 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       // A label of the action that will be presented to the user.
       label: 'Run Tests',
       keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_T,
+        monaco.KeyCode.F2
       ],
 
       // Method that will be executed when the action is triggered.

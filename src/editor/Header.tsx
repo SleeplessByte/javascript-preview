@@ -264,7 +264,7 @@ function GoMenu({
     >
       <li className={styles['item']}>
         <button onClick={runTests}>
-          Run tests <KeyCommand>Ctrl + T</KeyCommand>
+          Run tests <KeyCommand>F2</KeyCommand>
         </button>
       </li>
     </ul>
