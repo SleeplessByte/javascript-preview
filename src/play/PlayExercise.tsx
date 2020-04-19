@@ -49,7 +49,7 @@ export function PlayExercise(
 ) {
   const [resetIteration, setResetIteration] = useState(1)
   const { track, type, slug } = props.match.params
-  const { data: config } = useConfig(track)
+  const { data: config, refresh: refreshConfig } = useConfig(track)
   const { data: exercise, refresh: refreshExercise } = useExercise(
     track,
     type,
@@ -81,6 +81,11 @@ export function PlayExercise(
     }
   }, [track, type, slug, config])
 
+  const refresh = useCallback(() => {
+    refreshExercise()
+    refreshConfig()
+  }, [refreshExercise, refreshConfig])
+
   // Initial stub to code
   useEffect(() => {
     if (code === null && stub) {
@@ -89,7 +94,7 @@ export function PlayExercise(
     }
   }, [code, updateCode, stub])
 
-  useEvent('refresh', refreshExercise)
+  useEvent('refresh', refresh)
   useEvent('reset', resetExercise)
   useEvent('unlock', solveExercise)
 

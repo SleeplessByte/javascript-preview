@@ -152,7 +152,7 @@ function DropDown({
 
   switch (active) {
     case 'file': {
-      return <FileMenu left={left} top={top + 32} />
+      return <FileMenu left={left} top={top + 32} dismiss={dismiss} />
     }
     case 'view': {
       return (
@@ -176,18 +176,18 @@ function DropDown({
   return null
 }
 
-function FileMenu({ left, top }: { left: number; top: number }) {
+function FileMenu({ left, top, dismiss }: { left: number; top: number, dismiss(): void }) {
   const doExport = () => {
     emit('export')
-    emit('focus')
+    dismiss()
   }
   const doRefresh = () => {
     emit('refresh')
-    emit('focus')
+    dismiss()
   }
   const doReset = () => {
     emit('reset')
-    emit('focus')
+    dismiss()
   }
 
   return (

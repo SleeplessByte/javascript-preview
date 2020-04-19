@@ -47,7 +47,7 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
     editor.focus()
     editor.setPosition({ lineNumber: 2, column: 1 })
 
-    const onCommandPallete = () => editor.trigger('', 'editor.action.quickCommand', undefined)
+    const onCommandPallete = () => setTimeout(() => editor.trigger('', 'editor.action.quickCommand', undefined), 0)
     const onExport = () => editor.trigger('event', 'preview.action.export', undefined)
 
     editor.addAction({
