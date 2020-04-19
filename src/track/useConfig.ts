@@ -2,7 +2,7 @@ import { useMemo, useEffect, useCallback, useRef } from 'react'
 
 import { Configuration, SupportedTrack } from './types'
 
-import { StoredMemoryValue, useMemoryValue } from '../state/state'
+import { useMemoryValue, globalStoredValue } from '../state/state'
 
 type Actions = {
   refresh(): void
@@ -12,7 +12,7 @@ export function useConfig(
   track: SupportedTrack
 ): { data: Configuration | null | undefined } & Actions {
   const memoryValue = useMemo(
-    () => new StoredMemoryValue<Configuration>(`${track}/config.json`),
+    () => globalStoredValue<Configuration>(`${track}/config.json`),
     [track]
   )
   const configuration = useMemoryValue(memoryValue)

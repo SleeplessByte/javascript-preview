@@ -1,6 +1,6 @@
 import { SupportedTrack } from './types'
 import { useMemo, useEffect, useState, useCallback } from 'react'
-import { StoredMemoryValue, useMutableMemoryValue } from '../state/state'
+import { useMutableMemoryValue, globalStoredValue } from '../state/state'
 import { SOURCE_EXT, TESTS_EXT } from './mappings'
 
 interface RefreshableExercise {
@@ -30,7 +30,7 @@ export function useExercise(
 
   const currentExercise = useMemo(
     () =>
-      new StoredMemoryValue<Omit<RefreshableExercise, 'refresh' | 'reset'>>(
+      globalStoredValue<Omit<RefreshableExercise, 'refresh' | 'reset'>>(
         `${track}/${type}/${slug}`
       ),
     [track, type, slug]
