@@ -1,0 +1,7 @@
+.portals {
+  pointer-events: none;
+}
+
+.portals * {
+  pointer-events: initial;
+}

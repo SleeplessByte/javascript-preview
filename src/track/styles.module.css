@@ -1,0 +1,23 @@
+.exercises {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  line-height: 145%;
+}
+
+.exercises__list > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.exercises__list > ul > li {
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.actions {
+  margin-top: 40px;
+}
