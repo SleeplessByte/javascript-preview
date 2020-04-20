@@ -32,6 +32,15 @@ import { unlock } from '../state/useHasPrerequisites'
 import { useConfig } from '../track/useConfig'
 import { AnimatePresence, motion } from 'framer-motion'
 
+import styles from './styles.module.css'
+import equal from 'react-fast-compare'
+
+type CurrentExerciseProps = {
+  track: SupportedTrack
+  type: 'concept' | 'practice'
+  slug: string
+}
+
 const LazyMarkdown = React.lazy(() =>
   import('react-markdown').then((i) => ({ default: i.default }))
 )
@@ -99,34 +108,47 @@ export function PlayExercise(
   useEvent('unlock', solveExercise)
 
   return (
-    <main
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
-      <Header track={track} type={type} slug={slug} />
-      <Suspense fallback={<Loading />}>
-        <PortalHost>
-          <div style={{ flex: 1 }}>
-            <Editor
-              key={resetIteration}
-              track={track}
-              ready={!!(stub && code)}
-              code={
-                stub ? (typeof code === 'string' ? code : undefined) : undefined
-              }
-              saveCode={updateCode}
-              types={(types || '').startsWith('404') ? undefined : types || undefined}
-            />
-          </div>
-          <Popups track={track} type={type} slug={slug} />
-          <Notifications />
-        </PortalHost>
-      </Suspense>
-    </main>
+    <PortalHost>
+      <main
+        style={{
+          position: 'relative',
+          display: 'grid',
+          gridTemplateColumns: 'auto 500px',
+          gridTemplateRows: '48px auto 200px',
+          gridTemplateAreas: `
+            "header header"
+            "editor side"
+            "bottom side
+          `,
+          justifyItems: 'stretch',
+          alignItems: 'stretch',
+          width: '100vw',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <Header track={track} type={type} slug={slug} />
+        <Suspense fallback={<Loading />}>
+          <Editor
+            key={resetIteration}
+            track={track}
+            ready={!!(stub && code)}
+            code={
+              stub ? (typeof code === 'string' ? code : undefined) : undefined
+            }
+            saveCode={updateCode}
+            types={
+              (types || '').startsWith('404') ? undefined : types || undefined
+            }
+          />
+          <SidePanel track={track} type={type} slug={slug} />
+          <BottomPanel track={track} type={type} slug={slug} />
+        </Suspense>
+      </main>
+
+      <Popups track={track} type={type} slug={slug} />
+      <Notifications />
+    </PortalHost>
   )
 }
 
@@ -135,7 +157,7 @@ function Editor({
   code,
   saveCode,
   ready,
-  types
+  types,
 }: {
   track: SupportedTrack
   code: string | undefined
@@ -144,6 +166,40 @@ function Editor({
   saveCode(next: string): void
 }) {
   const codeRef = useRef<string>()
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [{ width, height }, setSize] = useState<{
+    width: string | number
+    height: string | number
+  }>({ width: '100%', height: '100%' })
+
+  useEffect(() => {
+    let lastAnimationFrame: number | undefined
+
+    function determineNewSize() {
+      lastAnimationFrame = undefined
+      const { current } = containerRef
+      if (!current) {
+        return
+      }
+
+      setSize(current.getBoundingClientRect())
+    }
+
+    function onResize() {
+      if (lastAnimationFrame) {
+        return
+      }
+
+      lastAnimationFrame = requestAnimationFrame(determineNewSize)
+    }
+
+    window.addEventListener('resize', onResize)
+    return () => {
+      lastAnimationFrame !== undefined &&
+        cancelAnimationFrame(lastAnimationFrame)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
 
   codeRef.current = code
 
@@ -152,24 +208,106 @@ function Editor({
   }
 
   return (
-    <LazyEditor
-      language={TRACK_TO_CODE_LANGUAGE[track]}
-      onCodeUpdated={saveCode}
-      codeRef={codeRef as RefObject<string>}
-      types={types}
-    />
+    <div ref={containerRef} style={{ gridArea: 'editor', overflow: 'hidden' }}>
+      <LazyEditor
+        language={TRACK_TO_CODE_LANGUAGE[track]}
+        onCodeUpdated={saveCode}
+        codeRef={codeRef as RefObject<string>}
+        types={types}
+        width={width}
+        height={height}
+      />
+    </div>
   )
 }
 
-function Popups({
-  track,
-  type,
-  slug,
-}: {
-  track: SupportedTrack
-  type: 'concept' | 'practice'
-  slug: string
-}) {
+function SidePanel({ track, type, slug }: CurrentExerciseProps) {
+  const { data } = useExercise(track, type, slug)
+
+  return (
+    <section
+      className={styles['panel']}
+      style={{
+        gridArea: 'side',
+        padding: '12px 16px',
+        fontSize: 14,
+        overflow: 'auto',
+        background: '#1e1e1e',
+        color: 'rgba(255, 255, 255, 0.8)',
+        borderLeft: '1px solid rgba(255, 255, 255, .1)',
+      }}
+    >
+      <Instructions
+        introduction={(data && data.introduction) || null}
+        instructions={(data && data.instructions) || null}
+      />
+    </section>
+  )
+}
+
+const MemoRunTests = React.memo(RunTests)
+const EMPTY = ''
+
+function BottomPanel({ track, type, slug }: CurrentExerciseProps) {
+  const [completed, setCompleted] = useState(false)
+  const [testableCode, setTestableCode] = useState<string | null>(null)
+  const { data: code } = useUserCode(track, type, slug)
+  const { data: exercise } = useExercise(track, type, slug)
+
+  const afterHref = `/${track}/play/${type}/${slug}/after`
+  const ready = testableCode && exercise
+  const codeRef = useRef<string | null>(testableCode)
+  const onCompleted = useCallback(() => setCompleted(true), [setCompleted])
+
+  codeRef.current = testableCode
+
+  useEffect(() => {
+    if (equal(code, codeRef.current)) {
+      return
+    }
+
+    const timeout = setTimeout(() => setTestableCode(code || null), 1000)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [code])
+
+  return (
+    <section
+      className={styles['panel']}
+      style={{
+        gridArea: 'bottom',
+        borderTop: '1px solid rgba(255, 255, 255, .1)',
+        background: '#1e1e1e',
+        color: 'rgba(255, 255, 255, .8)',
+        padding: '12px 16px',
+        fontSize: 14,
+        overflow: 'auto',
+      }}
+    >
+      {completed && (
+        <ButtonLink
+          type="secondary"
+          to={afterHref}
+          style={{ fontSize: 12, marginBottom: 12 }}
+        >
+          Complete exercise
+        </ButtonLink>
+      )}
+      {ready && (
+        <MemoRunTests
+          slug={slug}
+          code={testableCode || EMPTY}
+          tests={exercise!.tests || EMPTY}
+          onCompleted={onCompleted}
+        />
+      )}
+    </section>
+  )
+}
+
+function Popups({ track, type, slug }: CurrentExerciseProps) {
   const {
     push,
     location: { pathname },
@@ -222,13 +360,7 @@ function Popups({
   )
 }
 
-function InstructionsPopup(
-  props: RouteComponentProps<{
-    track: SupportedTrack
-    type: 'concept' | 'practice'
-    slug: string
-  }>
-) {
+function InstructionsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   const { track, type, slug } = props.match.params
   const { data } = useExercise(track, type, slug)
   const { goBack } = useHistory()
@@ -242,25 +374,31 @@ function InstructionsPopup(
   return (
     <Portal>
       <Modal title={`${type}/${slug}`} visible={true} onBack={goBack}>
-        <Suspense fallback={<Loading />}>
-          <h2 style={{ marginTop: 0 }}>Introduction</h2>
-          {introduction && <LazyMarkdown source={introduction} />}
-
-          <h2 style={{ marginTop: 40 }}>Instructions</h2>
-          {instructions && <LazyMarkdown source={instructions} />}
-        </Suspense>
+        <Instructions introduction={introduction} instructions={instructions} />
       </Modal>
     </Portal>
   )
 }
 
-function HintsPopup(
-  props: RouteComponentProps<{
-    track: SupportedTrack
-    type: 'concept' | 'practice'
-    slug: string
-  }>
-) {
+function Instructions({
+  introduction,
+  instructions,
+}: {
+  introduction: string | null
+  instructions: string | null
+}) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <h2 style={{ marginTop: 0 }}>Introduction</h2>
+      {introduction && <LazyMarkdown source={introduction} />}
+
+      <h2 style={{ marginTop: 40 }}>Instructions</h2>
+      {instructions && <LazyMarkdown source={instructions} />}
+    </Suspense>
+  )
+}
+
+function HintsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   const { track, type, slug } = props.match.params
   const { data } = useExercise(track, type, slug)
   const { goBack } = useHistory()
@@ -330,13 +468,7 @@ function LisItem({
   )
 }
 
-function RunTestsPopup(
-  props: RouteComponentProps<{
-    track: SupportedTrack
-    type: 'concept' | 'practice'
-    slug: string
-  }>
-) {
+function RunTestsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   const [completed, setCompleted] = useState(false)
   const { track, type, slug } = props.match.params
   const { goBack } = useHistory()
@@ -451,14 +583,16 @@ function RunTests({
   return (
     <table style={{ width: '100%' }}>
       <tbody>
-        {result.messages.map(({ test, message, details }) => {
+        {result.messages.map(({ test, message, details }, index) => {
           return (
-            <Fragment key={test}>
+            <Fragment key={index}>
               <tr key={test}>
+                <td style={{ width: 24 }}>
+                  {message === 'passed' ? '✅' : '💥'}
+                </td>
                 <td>
                   <code>{test}</code>
                 </td>
-                <td>{message === 'passed' ? '✅' : '💥'}</td>
               </tr>
               {details && (
                 <tr key={`${test}-error`}>
@@ -496,13 +630,7 @@ function RunTests({
   )
 }
 
-function AfterPopup(
-  props: RouteComponentProps<{
-    track: SupportedTrack
-    type: 'concept' | 'practice'
-    slug: string
-  }>
-) {
+function AfterPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   const { track, type, slug } = props.match.params
   const { data } = useExercise(track, type, slug)
   const { goBack } = useHistory()

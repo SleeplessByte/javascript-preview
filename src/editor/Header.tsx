@@ -51,7 +51,11 @@ export function Header({ track, type, slug }: HeaderProps) {
   const activeRef = active ? { file, view, go, help }[active] : null
 
   return (
-    <header className={styles['header']} onClick={maybeDismissAll}>
+    <header
+      className={styles['header']}
+      onClick={maybeDismissAll}
+      style={{ gridArea: 'header' }}
+    >
       <ol className={styles['menu']}>
         <li ref={file}>
           <button
@@ -176,7 +180,15 @@ function DropDown({
   return null
 }
 
-function FileMenu({ left, top, dismiss }: { left: number; top: number, dismiss(): void }) {
+function FileMenu({
+  left,
+  top,
+  dismiss,
+}: {
+  left: number
+  top: number
+  dismiss(): void
+}) {
   const doExport = () => {
     emit('export')
     dismiss()

@@ -1,16 +1,25 @@
 import React, { RefObject } from 'react'
-import MonacoEditor, { EditorDidMount, ChangeHandler, EditorWillMount } from 'react-monaco-editor'
+import MonacoEditor, {
+  EditorDidMount,
+  ChangeHandler,
+  EditorWillMount,
+} from 'react-monaco-editor'
 import { on as onEvent, emit as emitEvent } from './useEvent'
 
 type EditorProps = {
+  width: number | string
+  height: number | string
   types: string | undefined
   language: string
   codeRef: RefObject<string>
   onCodeUpdated: (nextCode: string) => void
 }
 
-export class Editor extends React.Component<EditorProps, { code: string, error: Error | undefined }> {
-  subscriptions: Array<(() => void)>
+export class Editor extends React.Component<
+  EditorProps,
+  { code: string; error: Error | undefined }
+> {
+  subscriptions: Array<() => void>
 
   constructor(props: EditorProps) {
     super(props)
@@ -29,14 +38,12 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
     this.setState((p) => ({ ...p, error: err }))
   }
 
-  editorWillMount(
-    monaco: Parameters<EditorWillMount>[0]
-  ) {
-
+  editorWillMount(monaco: Parameters<EditorWillMount>[0]) {
     if (this.props.types) {
-      monaco.languages.typescript.javascriptDefaults.addExtraLib([
-        this.props.types
-      ].join('\n'), 'ts:filename/global.d.ts');
+      monaco.languages.typescript.javascriptDefaults.addExtraLib(
+        [this.props.types].join('\n'),
+        'ts:filename/global.d.ts'
+      )
     }
   }
 
@@ -47,8 +54,13 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
     editor.focus()
     editor.setPosition({ lineNumber: 2, column: 1 })
 
-    const onCommandPallete = () => setTimeout(() => editor.trigger('', 'editor.action.quickCommand', undefined), 0)
-    const onExport = () => editor.trigger('event', 'preview.action.export', undefined)
+    const onQuickCommand = () =>
+      setTimeout(
+        () => editor.trigger('', 'editor.action.quickCommand', undefined),
+        0
+      )
+    const onExport = () =>
+      editor.trigger('event', 'preview.action.export', undefined)
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -56,19 +68,17 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
 
       // A label of the action that will be presented to the user.
       label: 'Export',
-      keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_E,
-      ],
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_E],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       const model = editor.getModel()
-       if (model) {
-        console.log(model.getValue())
-       }
-      }
-    });
+      run: function (editor) {
+        const model = editor.getModel()
+        if (model) {
+          console.log(model.getValue())
+        }
+      },
+    })
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -76,16 +86,14 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
 
       // A label of the action that will be presented to the user.
       label: 'Refresh Exercise',
-      keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_R,
-      ],
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_R],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       emitEvent('refresh')
-      }
-    });
+      run: function (editor) {
+        emitEvent('refresh')
+      },
+    })
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -95,15 +103,15 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       label: 'View Instructions',
       keybindings: [
         monaco.KeyCode.F10,
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_I
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_I,
       ],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       emitEvent('instructions')
-      }
-    });
+      run: function (editor) {
+        emitEvent('instructions')
+      },
+    })
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -113,15 +121,15 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       label: 'View Hints',
       keybindings: [
         monaco.KeyCode.F11,
-        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_H
+        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_H,
       ],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       emitEvent('hints')
-      }
-    });
+      run: function (editor) {
+        emitEvent('hints')
+      },
+    })
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -131,15 +139,15 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       label: 'Run Tests',
       keybindings: [
         monaco.KeyCode.F2,
-        monaco.KeyMod.Shift | monaco.KeyCode.Enter
+        monaco.KeyMod.Shift | monaco.KeyCode.Enter,
       ],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       emitEvent('executeTests')
-      }
-    });
+      run: function (editor) {
+        emitEvent('executeTests')
+      },
+    })
 
     editor.addAction({
       // An unique identifier of the contributed action.
@@ -147,21 +155,20 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
 
       // A label of the action that will be presented to the user.
       label: 'Save Exercise',
-      keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
-      ],
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convinience
-      run: function( editor ) {
-       emitEvent('notification', {
-         title: 'Auto-saving enabled',
-         details: 'Your code is automatically stored as you type, as long as there is enough space on your device.'
+      run: function (editor) {
+        emitEvent('notification', {
+          title: 'Auto-saving enabled',
+          details:
+            'Your code is automatically stored as you type, as long as there is enough space on your device.',
         })
-      }
-    });
+      },
+    })
 
-    this.subscriptions.push(onEvent('commands', onCommandPallete))
+    this.subscriptions.push(onEvent('commands', onQuickCommand))
     this.subscriptions.push(onEvent('export', onExport))
     this.subscriptions.push(onEvent('focus', editor.focus.bind(editor)))
   }
@@ -185,7 +192,7 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       selectOnLineNumbers: true,
       glyphMargin: true,
       fontLigatures: true,
-      automaticLayout: true,
+      automaticLayout: false,
     }
 
     if (this.state.error) {
@@ -196,6 +203,8 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
       )
     }
 
+    console.log({ width: this.props.width, height: this.props.height })
+
     return (
       <MonacoEditor
         language={this.props.language}
@@ -205,6 +214,8 @@ export class Editor extends React.Component<EditorProps, { code: string, error: 
         onChange={this.onChange}
         editorDidMount={this.editorDidMount}
         editorWillMount={this.editorWillMount}
+        width={this.props.width}
+        height={this.props.height}
       />
     )
   }
