@@ -1,39 +1,41 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { highlight, languages } from 'prismjs'
 import React, {
+  Fragment,
+  RefObject,
   Suspense,
   useCallback,
   useEffect,
   useRef,
-  RefObject,
   useState,
-  Fragment,
 } from 'react'
+import equal from 'react-fast-compare'
 import {
-  RouteComponentProps,
-  useHistory,
-  Switch,
   Route,
+  RouteComponentProps,
+  Switch,
+  useHistory,
 } from 'react-router-dom'
-import { SupportedTrack } from '../track/types'
-import { Loading } from '../core/Loading'
 
-import { TRACK_TO_CODE_LANGUAGE } from '../track/mappings'
-import { Header } from '../editor/Header'
-import { useExercise } from '../track/useExercise'
-import { useEvent, emit } from '../editor/useEvent'
-import { useUserCode } from '../state/useUserCode'
+import { Button, ButtonLink } from '../core/Button'
+import { Loading } from '../core/Loading'
 import { Modal } from '../core/Modal'
 import { Portal } from '../core/Portal'
 import { PortalHost } from '../core/Portal/PortalHost'
-import { Button, ButtonLink } from '../core/Button'
-import { runTests, FailedTestRun } from '../tests/runner'
-import { useHasSolved, markAsSolved } from '../state/useHasSolved'
-import { TestRun } from '../tests/types'
+import { Header } from '../editor/Header'
+import { emit, useEvent } from '../editor/useEvent'
 import { unlock } from '../state/useHasPrerequisites'
+import { markAsSolved, useHasSolved } from '../state/useHasSolved'
+import { useUserCode } from '../state/useUserCode'
+import { FailedTestRun, runTests } from '../tests/runner'
+import { TestRun } from '../tests/types'
+import { TRACK_TO_CODE_LANGUAGE } from '../track/mappings'
+import { SupportedTrack } from '../track/types'
 import { useConfig } from '../track/useConfig'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useExercise } from '../track/useExercise'
 
 import styles from './styles.module.css'
-import equal from 'react-fast-compare'
+import './highlight.css'
 
 type CurrentExerciseProps = {
   track: SupportedTrack
@@ -235,6 +237,7 @@ function SidePanel({ track, type, slug }: CurrentExerciseProps) {
         background: '#1e1e1e',
         color: 'rgba(255, 255, 255, 0.8)',
         borderLeft: '1px solid rgba(255, 255, 255, .1)',
+        lineHeight: '150%',
       }}
     >
       <Instructions
@@ -390,12 +393,54 @@ function Instructions({
   return (
     <Suspense fallback={<Loading />}>
       <h2 style={{ marginTop: 0 }}>Introduction</h2>
-      {introduction && <LazyMarkdown source={introduction} />}
+      {introduction && (
+        <LazyMarkdown source={introduction} renderers={{ code: CodeBlock }} />
+      )}
 
       <h2 style={{ marginTop: 40 }}>Instructions</h2>
-      {instructions && <LazyMarkdown source={instructions} />}
+      {instructions && (
+        <LazyMarkdown source={instructions} renderers={{ code: CodeBlock }} />
+      )}
     </Suspense>
   )
+}
+
+class CodeBlock extends React.Component<
+  { language: string; value: string },
+  { hasError: boolean }
+> {
+  constructor(props: { language: string; value: string }) {
+    super(props)
+
+    this.state = {
+      hasError: false,
+    }
+  }
+
+  componentDidCatch(err: Error) {
+    this.setState({ hasError: true })
+  }
+
+  render() {
+    const cls = 'language-' + this.props.language
+    const html =
+      this.state.hasError || !languages[this.props.language]
+        ? this.props.value
+        : highlight(
+            this.props.value,
+            languages[this.props.language],
+            this.props.language
+          )
+
+    return (
+      <pre className={`codeblock ${cls}`} style={{ lineHeight: '19px' }}>
+        <code
+          dangerouslySetInnerHTML={{ __html: html || '' }}
+          className={cls}
+        />
+      </pre>
+    )
+  }
 }
 
 function HintsPopup(props: RouteComponentProps<CurrentExerciseProps>) {

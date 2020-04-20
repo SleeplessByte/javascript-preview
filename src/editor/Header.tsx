@@ -3,7 +3,7 @@ import React, { useState, useRef, RefObject, useEffect } from 'react'
 import styles from './styles.module.css'
 import { Link } from 'react-router-dom'
 import { SupportedTrack } from '../track/types'
-import { emit, useEvent } from './useEvent'
+import { emit } from './useEvent'
 
 export interface HeaderProps {
   track: SupportedTrack

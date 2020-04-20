@@ -1,0 +1,25 @@
+.codeblock {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 8px 16px;
+  margin: 0 -16px;
+  font-size: 13px;
+}
+
+.token.comment {
+  color: #608b4e;
+}
+
+.token.number {
+  color: #b5cea8;
+}
+
+.token.string {
+  color: #ce9178;
+}
+
+.token.keyword,
+.token.boolean {
+  color: #569cd6;
+}
+
+/* #3dc9b0 */

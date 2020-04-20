@@ -8,16 +8,14 @@ export function useEvent(event: keyof typeof EVENTS, handler: mitt.Handler) {
     const key = EVENTS[event]
 
     emitter.on(key, handler)
-    console.log("add event", event)
 
     return () => {
-      console.log("remove event", event)
       emitter.off(key, handler)
     }
   }, [event, handler])
 }
 
-export function on(event: keyof typeof EVENTS , handler: mitt.Handler) {
+export function on(event: keyof typeof EVENTS, handler: mitt.Handler) {
   const key = EVENTS[event]
 
   emitter.on(key, handler)
@@ -27,7 +25,10 @@ export function on(event: keyof typeof EVENTS , handler: mitt.Handler) {
   }
 }
 
-export function emit(event: keyof typeof EVENTS , ...params: Parameters<mitt.Handler>) {
+export function emit(
+  event: keyof typeof EVENTS,
+  ...params: Parameters<mitt.Handler>
+) {
   emitter.emit(EVENTS[event], ...params)
 }
 
@@ -41,5 +42,5 @@ const EVENTS = {
   executeTests: 'execute.tests',
   unlock: 'exercise.solved',
   focus: 'editor.focus',
-  notification: 'notification'
+  notification: 'notification',
 }

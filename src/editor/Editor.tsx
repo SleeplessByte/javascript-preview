@@ -203,8 +203,6 @@ export class Editor extends React.Component<
       )
     }
 
-    console.log({ width: this.props.width, height: this.props.height })
-
     return (
       <MonacoEditor
         language={this.props.language}
