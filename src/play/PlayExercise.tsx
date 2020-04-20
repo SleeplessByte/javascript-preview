@@ -143,9 +143,9 @@ export function PlayExercise(
               (types || '').startsWith('404') ? undefined : types || undefined
             }
           />
-          <SidePanel track={track} type={type} slug={slug} />
-          <BottomPanel track={track} type={type} slug={slug} />
         </Suspense>
+        <SidePanel track={track} type={type} slug={slug} />
+        <BottomPanel track={track} type={type} slug={slug} />
       </main>
 
       <Popups track={track} type={type} slug={slug} />
