@@ -238,6 +238,7 @@ function SidePanel({ track, type, slug }: CurrentExerciseProps) {
         color: 'rgba(255, 255, 255, 0.8)',
         borderLeft: '1px solid rgba(255, 255, 255, .1)',
         lineHeight: '150%',
+        boxShadow: '#000000 0 4px 6px -6px inset',
       }}
     >
       <Instructions
