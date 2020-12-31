@@ -27,7 +27,7 @@ import { emit, useEvent } from '../editor/useEvent'
 import { unlock } from '../state/useHasPrerequisites'
 import { markAsSolved, useHasSolved } from '../state/useHasSolved'
 import { useUserCode } from '../state/useUserCode'
-import { FailedTestRun, runTests } from '../tests/runner'
+import { FailedTestRun } from '../tests/runner'
 import { TestRun } from '../tests/types'
 import { TRACK_TO_CODE_LANGUAGE } from '../track/mappings'
 import { SupportedTrack } from '../track/types'
@@ -36,6 +36,8 @@ import { useExercise } from '../track/useExercise'
 
 import styles from './styles.module.css'
 import './highlight.css'
+
+const Worker = require('worker-loader!./tests.worker') // eslint-disable-line import/no-webpack-loader-syntax
 
 type CurrentExerciseProps = {
   track: SupportedTrack
@@ -549,6 +551,16 @@ function RunTestsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   )
 }
 
+type WorkerType = {
+  run: (
+    tests: string,
+    code: string,
+    slug: string
+  ) => Promise<(FailedTestRun | TestRun) & { cleanup(): void }>
+}
+
+const MAX_RUN_TIME = 1000 * 20
+
 function RunTests({
   slug,
   code,
@@ -582,7 +594,15 @@ function RunTests({
       cleanupRef.current = null
     }
 
-    runTests(tests || '', code || '', slug).then(
+    const testsWorker = new Worker()
+    const run = ((testsWorker as unknown) as WorkerType).run
+
+    setTimeout(() => {
+      testsWorker.terminate()
+      setResult({ message: 'Timeout reached' })
+    }, MAX_RUN_TIME)
+
+    run(tests || '', code || '', slug).then(
       ({ cleanup, ...result }) => {
         if (stillCareAboutThis) {
           cleanupRef.current = cleanup

@@ -1,18 +1,19 @@
 {
-  "name": "@exercim/javascript-preview",
+  "name": "@exercism/javascript-preview",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "framer-motion": "^1.10.3",
-    "localforage": "^1.7.3",
-    "mitt": "^1.2.0",
-    "prismjs": "^1.20.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-fast-compare": "^3.0.1",
-    "react-markdown": "^4.3.1",
-    "react-monaco-editor": "^0.36.0",
-    "react-router-dom": "^5.1.2"
+    "framer-motion": "^2.9.4",
+    "localforage": "^1.9.0",
+    "mitt": "^2.1.0",
+    "prismjs": "^1.22.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-fast-compare": "^3.2.0",
+    "react-markdown": "^5.0.2",
+    "react-monaco-editor": "^0.40.0",
+    "react-router-dom": "^5.2.0",
+    "worker-loader": "^3.0.5"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -36,18 +37,19 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.5.0",
-    "@testing-library/react": "^10.0.2",
-    "@testing-library/user-event": "^10.0.2",
-    "@types/jest": "^25.2.1",
-    "@types/node": "^13.11.1",
-    "@types/prismjs": "^1.16.0",
-    "@types/react": "^16.9.34",
-    "@types/react-dom": "^16.9.6",
-    "@types/react-router-dom": "^5.1.4",
-    "monaco-editor-webpack-plugin": "^1.9.0",
-    "react-app-rewired": "^2.1.5",
-    "react-scripts": "3.4.1",
-    "typescript": "~3.8.3"
+    "@testing-library/jest-dom": "^5.11.5",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/node": "^14.14.6",
+    "@types/prismjs": "^1.16.2",
+    "@types/react": "^16.9.55",
+    "@types/react-dom": "^16.9.9",
+    "@types/react-router-dom": "^5.1.6",
+    "monaco-editor-webpack-plugin": "^2.0.0",
+    "react-app-rewired": "^2.1.6",
+    "react-scripts": "4.0.0",
+    "typescript": "~4.0.5",
+    "workerize-loader": "^1.3.0"
   }
 }
