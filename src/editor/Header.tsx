@@ -275,7 +275,7 @@ function ViewMenu({
       <li className={styles['divider']} />
       <li className={styles['item']}>
         <a
-          href={`https://github.com/exercism/v3/tree/master/languages/${track}/exercises/${type}/${slug}`}
+          href={`https://github.com/exercism/${track}/tree/master/exercises/${type}/${slug}`}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -285,7 +285,6 @@ function ViewMenu({
     </ul>
   )
 }
-
 function GoMenu({ left, top }: { left: number; top: number }) {
   const runTests = () => {
     emit('executeTests')

@@ -128,23 +128,23 @@ function useCurrentExercise(
 
     Promise.all([
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/${slug}.${SOURCE_EXT[track]}`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/${slug}.${SOURCE_EXT[track]}`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/${slug}.${TESTS_EXT[track]}`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/${slug}.${TESTS_EXT[track]}`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/introduction.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/introduction.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/instructions.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/instructions.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/hints.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/hints.md`,
         { signal }
       ).then((response) => response.text()),
     ])
@@ -240,7 +240,7 @@ function PickExercise({ track }: { track: Track }) {
     const { signal } = controller
 
     fetch(
-      `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/config.json`,
+      `https://raw.githubusercontent.com/exercism/${track}/main/config.json`,
       { signal }
     )
       .then((response) => response.json())

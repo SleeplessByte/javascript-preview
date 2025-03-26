@@ -36,7 +36,7 @@ export function useConfig(
     const { signal } = controller.current
 
     fetch(
-      `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/config.json`,
+      `https://raw.githubusercontent.com/exercism/${track}/main/config.json`,
       { signal }
     )
       .then((response) => response.json())

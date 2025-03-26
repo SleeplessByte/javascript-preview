@@ -36,9 +36,8 @@ export function useExercise(
     [track, type, slug]
   )
 
-  const { current: exercise, set: setExercise } = useMutableMemoryValue(
-    currentExercise
-  )
+  const { current: exercise, set: setExercise } =
+    useMutableMemoryValue(currentExercise)
 
   const refresh = useCallback(
     () => setForceRefreshCount((count) => count + 1),
@@ -53,31 +52,31 @@ export function useExercise(
 
     Promise.all([
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/${slug}.${SOURCE_EXT[track]}`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/${slug}.${SOURCE_EXT[track]}`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/${slug}.${TESTS_EXT[track]}`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/${slug}.${TESTS_EXT[track]}`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/introduction.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/introduction.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/instructions.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/instructions.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/hints.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/hints.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/.docs/after.md`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/.docs/after.md`,
         { signal }
       ).then((response) => response.text()),
       fetch(
-        `https://raw.githubusercontent.com/exercism/v3/master/languages/${track}/exercises/${type}/${slug}/global.d.ts`,
+        `https://raw.githubusercontent.com/exercism/${track}/main/exercises/${type}/${slug}/global.d.ts`,
         { signal }
       )
         .then((response) => response.text())
@@ -96,7 +95,7 @@ export function useExercise(
             hints,
             tests,
             after,
-            types
+            types,
           },
         })
       )

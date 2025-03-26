@@ -1,15 +1,15 @@
-import { TestRun } from "./types"
+import { TestRun } from './types'
 
 export type FailedTestRun = {
   message: string
 }
 
-export function runTests(exerciseTests: string, userCode: string, slug: string): Promise<(TestRun | FailedTestRun) & { cleanup: () => void }> {
-  const { tests, object } = prepareTest(
-    exerciseTests,
-    userCode,
-    slug
-  )
+export function runTests(
+  exerciseTests: string,
+  userCode: string,
+  slug: string
+): Promise<(TestRun | FailedTestRun) & { cleanup: () => void }> {
+  const { tests, object } = prepareTest(exerciseTests, userCode, slug)
 
   function cleanup() {
     console.log('[suite] cleaning up run', tests, object)
@@ -19,12 +19,12 @@ export function runTests(exerciseTests: string, userCode: string, slug: string):
 
   return import(/* webpackIgnore: true */ `${tests}`)
     .then((result) => {
-      return { ...result.run as TestRun, cleanup }
+      return { ...(result.run as TestRun), cleanup }
     })
     .catch((error) => {
       console.error('[suite] failed to run the tests \n', error)
 
-      return { ...{ message: error.message } as FailedTestRun, cleanup }
+      return { ...({ message: error.message } as FailedTestRun), cleanup }
     })
 }
 
@@ -36,11 +36,22 @@ function prepareTest(tests: string, code: string, slug: string) {
     .replace(`"./${slug}"`, `'${importableCode}'`)
     .split('\n')
 
+  // Delete globals import
+  lines.splice(
+    lines.findIndex(
+      (l) => l.indexOf('import ') !== -1 && l.indexOf("from '@jest/globals'")
+    ),
+    1,
+    "// import { ... } from '@jest/globals'"
+  )
+
+  // Add test helper
   lines.splice(
     lines.findIndex((l) => l.indexOf('from ') !== -1) + 1,
     0,
     TEST_HELPER
   )
+
   return { tests: esm`${lines.join('\n')}`, object: importableCode }
 }
 
@@ -65,7 +76,7 @@ try {
   }
   */
 
-  /*
+/*
  function esm2(templateStrings: TemplateStringsArray, ...substitutions: string[]) {
   let js = templateStrings.raw[0];
   for (let i=0; i<substitutions.length; i++) {
@@ -75,7 +86,10 @@ try {
 }
 */
 
-const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) => URL.createObjectURL(new Blob([String.raw({ raw } as any, ...vals)], { type: 'text/javascript' }));
+const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>
+  URL.createObjectURL(
+    new Blob([String.raw({ raw } as any, ...vals)], { type: 'text/javascript' })
+  )
 
 const TEST_HELPER = `
 const run = {
