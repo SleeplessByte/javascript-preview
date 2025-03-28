@@ -36,7 +36,7 @@ import { useExercise } from '../track/useExercise'
 
 import styles from './styles.module.css'
 import './highlight.css'
-import { ModuleKind, ModuleResolutionKind, ScriptTarget, transpile } from 'typescript'
+
 
 type CurrentExerciseProps = {
   track: SupportedTrack
@@ -516,6 +516,9 @@ function LisItem({
   )
 }
 
+declare type TypeScriptGlobal = { ts: typeof import('typescript') }
+declare var window: Window & typeof globalThis & TypeScriptGlobal;
+
 function RunTestsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
   const [completed, setCompleted] = useState(false)
   const { track, type, slug } = props.match.params
@@ -590,11 +593,11 @@ function RunTests({
     }
 
     if (shouldTranspile) {
-      effectTests = transpile(effectTests, {
+      effectTests = window.ts.transpile(effectTests, {
         "skipLibCheck": true,
-        "module": ModuleKind.ESNext,
-        "moduleResolution": ModuleResolutionKind.Bundler,
-        "target": ScriptTarget.ESNext,
+        "module": "ESNext" as any,
+        "moduleResolution": "bundler" as any,
+        "target": "ESNext" as any,
         "isolatedModules": true,
         "esModuleInterop": true,
         "noEmit": true,
@@ -603,11 +606,11 @@ function RunTests({
         "lib": [ "esnext" ],
         "baseUrl": "./",
       })
-      effectCode = transpile(effectCode, {
+      effectCode = window.ts.transpile(effectCode, {
         "skipLibCheck": true,
-        "module": ModuleKind.ESNext,
-        "moduleResolution": ModuleResolutionKind.Bundler,
-        "target": ScriptTarget.ESNext,
+        "module": "ESNext" as any,
+        "moduleResolution": "bundler" as any,
+        "target": "ESNext" as any,
         "isolatedModules": true,
         "esModuleInterop": true,
         "noEmit": true,
