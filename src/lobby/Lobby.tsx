@@ -73,8 +73,9 @@ function Limitations() {
           <code>Promise</code>-based) when they're no longer needed.
         </li>
         <li>
-          Does <strong>not</strong> <em>transiple</em> your code. This means the
-          code you write should only use features your browser understands.
+          Does <strong>not</strong> <em>transpile</em> your code (other than ts
+          to js). This means the code you write should only use features your
+          browser understands.
         </li>
         <li>
           Does <strong>not</strong> use a full-fledged test-runner (like Jest).
@@ -84,12 +85,11 @@ function Limitations() {
         <li>
           Does <strong>not</strong> "sandbox" your code or the tests. This is
           generally just fine as it will <em>not</em> use <em>any</em>{' '}
-          depenencies, and the only attack vector is <em>your own input</em>.
+          dependencies, and the only attack vector is <em>your own input</em>.
         </li>
         <li>
-          Only supports the <code>javascript</code> track. Support for{' '}
-          <code>typescript</code> will come and after that anything that is
-          supported with WebAssembly.
+          Only supports the <code>javascript</code> and <code>typescript</code>
+          tracks.
         </li>
         <li>Accessibility might be spotty.</li>
         <li>No support for mobile.</li>
