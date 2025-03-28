@@ -36,6 +36,7 @@ import { useExercise } from '../track/useExercise'
 
 import styles from './styles.module.css'
 import './highlight.css'
+import { ModuleKind, ModuleResolutionKind, ScriptTarget, transpile } from 'typescript'
 
 type CurrentExerciseProps = {
   track: SupportedTrack
@@ -304,6 +305,7 @@ function BottomPanel({ track, type, slug }: CurrentExerciseProps) {
           slug={slug}
           code={testableCode || EMPTY}
           tests={exercise!.tests || EMPTY}
+          shouldTranspile={track === 'typescript'}
           onCompleted={onCompleted}
         />
       )}
@@ -543,6 +545,7 @@ function RunTestsPopup(props: RouteComponentProps<CurrentExerciseProps>) {
           code={code}
           tests={exercise.tests || ''}
           onCompleted={() => setCompleted(true)}
+          shouldTranspile={track === 'typescript'}
         />
       </Modal>
     </Portal>
@@ -553,11 +556,13 @@ function RunTests({
   slug,
   code,
   tests,
+  shouldTranspile,
   onCompleted,
 }: {
   slug: string
   code: string
   tests: string
+  shouldTranspile: boolean
   onCompleted: () => void
 }) {
   const [result, setResult] = useState<FailedTestRun | TestRun>()
@@ -575,6 +580,8 @@ function RunTests({
 
   useEffect(() => {
     let stillCareAboutThis = true
+    let effectTests = tests
+    let effectCode = code
 
     // Cleanup previous run
     if (cleanupRef.current) {
@@ -582,7 +589,36 @@ function RunTests({
       cleanupRef.current = null
     }
 
-    runTests(tests || '', code || '', slug).then(
+    if (shouldTranspile) {
+      effectTests = transpile(effectTests, {
+        "skipLibCheck": true,
+        "module": ModuleKind.ESNext,
+        "moduleResolution": ModuleResolutionKind.Bundler,
+        "target": ScriptTarget.ESNext,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "outDir": "dist",
+        "lib": [ "esnext" ],
+        "baseUrl": "./",
+      })
+      effectCode = transpile(effectCode, {
+        "skipLibCheck": true,
+        "module": ModuleKind.ESNext,
+        "moduleResolution": ModuleResolutionKind.Bundler,
+        "target": ScriptTarget.ESNext,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "outDir": "dist",
+        "lib": [ "esnext" ],
+        "baseUrl": "./",
+      })
+    }
+
+    runTests(effectTests || '', effectCode || '', slug).then(
       ({ cleanup, ...result }) => {
         if (stillCareAboutThis) {
           cleanupRef.current = cleanup
@@ -611,7 +647,7 @@ function RunTests({
     return () => {
       stillCareAboutThis = false
     }
-  }, [code, tests, slug, onCompleted])
+  }, [code, tests, slug, onCompleted, shouldTranspile])
 
   if (!result) {
     return <Loading />

@@ -127,7 +127,7 @@ const GLOBAL_STORED_VALUES: Record<string, StoredMemoryValue<unknown>> = {}
 export function globalStoredValue<T>(
   key: string,
   hydrate: boolean = true,
-  initial?: T | undefined
+  initial?: Readonly<T> | undefined
 ) {
   const current = GLOBAL_STORED_VALUES[key]
   if (current) {

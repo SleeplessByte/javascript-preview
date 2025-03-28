@@ -12,5 +12,5 @@ export const SOURCE_EXT: Record<SupportedTrack, string> = {
 
 export const TESTS_EXT: Record<SupportedTrack, string> = {
   javascript: 'spec.js',
-  typescript: 'spec.ts',
+  typescript: 'test.ts',
 }

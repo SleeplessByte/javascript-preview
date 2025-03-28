@@ -1440,7 +1440,7 @@ __metadata:
     react-monaco-editor: "npm:^0.36.0"
     react-router-dom: "npm:^5.1.2"
     react-scripts: "npm:3.4.1"
-    typescript: "npm:~3.8.3"
+    typescript: "npm:~5.8.2"
   languageName: unknown
   linkType: soft
 
@@ -14824,23 +14824,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:~3.8.3":
-  version: 3.8.3
-  resolution: "typescript@npm:3.8.3"
+"typescript@npm:~5.8.2":
+  version: 5.8.2
+  resolution: "typescript@npm:5.8.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/070c3c4195005c3afb15f44a00eec66d159da52b1539eecd25cff09996cbceb916a19a1f87909819c3b637b5b58ac62e39f1af0ce93ab60d830fda599d7f69d4
+  checksum: 10c0/5c4f6fbf1c6389b6928fe7b8fcd5dc73bb2d58cd4e3883f1d774ed5bd83b151cbac6b7ecf11723de56d4676daeba8713894b1e9af56174f2f9780ae7848ec3c6
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A~3.8.3#optional!builtin<compat/typescript>":
-  version: 3.8.3
-  resolution: "typescript@patch:typescript@npm%3A3.8.3#optional!builtin<compat/typescript>::version=3.8.3&hash=c44097"
+"typescript@patch:typescript@npm%3A~5.8.2#optional!builtin<compat/typescript>":
+  version: 5.8.2
+  resolution: "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/e13d78af3ace03b43827e6cf76aa5ec7525ebdc02a92d84ee3f966063d3c6e0e21104941bfb1c32f6c208add4993175a2ead6f93d84bc417658e9524409bf22c
+  checksum: 10c0/5448a08e595cc558ab321e49d4cac64fb43d1fa106584f6ff9a8d8e592111b373a995a1d5c7f3046211c8a37201eb6d0f1566f15cdb7a62a5e3be01d087848e2
   languageName: node
   linkType: hard
 

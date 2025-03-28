@@ -9,6 +9,7 @@ export function runTests(
   userCode: string,
   slug: string
 ): Promise<(TestRun | FailedTestRun) & { cleanup: () => void }> {
+
   const { tests, object } = prepareTest(exerciseTests, userCode, slug)
 
   function cleanup() {
@@ -34,6 +35,8 @@ function prepareTest(tests: string, code: string, slug: string) {
   const lines = tests
     .replace(`'./${slug}'`, `'${importableCode}'`)
     .replace(`"./${slug}"`, `'${importableCode}'`)
+    .replace(`'./${slug}.ts'`, `'${importableCode}'`)
+    .replace(`"./${slug}.ts"`, `'${importableCode}'`)
     .split('\n')
 
   // Delete globals import
@@ -51,6 +54,9 @@ function prepareTest(tests: string, code: string, slug: string) {
     0,
     TEST_HELPER
   )
+
+
+  console.log(lines)
 
   return { tests: esm`${lines.join('\n')}`, object: importableCode }
 }

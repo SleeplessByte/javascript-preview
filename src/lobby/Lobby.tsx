@@ -101,7 +101,8 @@ function Limitations() {
 function CTA() {
   return (
     <section className={styles['actions']}>
-      <ButtonLink to="/javascript/exercises">Get Started</ButtonLink>
+      <ButtonLink to="/javascript/exercises" style={{ marginRight: 4 }}>Go to JavaScript</ButtonLink>
+      <ButtonLink to="/typescript/exercises">Go to TypeScript</ButtonLink>
     </section>
   )
 }
